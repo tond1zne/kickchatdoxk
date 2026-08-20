@@ -465,6 +465,24 @@
   // ⚠️ Replace the line below with YOUR real production domain from Vercel.
   oauthRedirect.value = 'https://chatdock-1.vercel.app/';
 
+  // Client ID / Secret must survive the full-page reload that happens when
+  // Kick redirects back with ?code=... — a plain <input> resets on reload,
+  // so persist these to localStorage and restore them immediately.
+  (function restoreOauthAppCreds(){
+    try{
+      const savedId = localStorage.getItem('kickDockClientId');
+      const savedSecret = localStorage.getItem('kickDockClientSecret');
+      if (savedId) oauthClientId.value = savedId;
+      if (savedSecret) oauthClientSecret.value = savedSecret;
+    }catch(e){}
+  })();
+  oauthClientId.addEventListener('input', () => {
+    try{ localStorage.setItem('kickDockClientId', oauthClientId.value.trim()); }catch(e){}
+  });
+  oauthClientSecret.addEventListener('input', () => {
+    try{ localStorage.setItem('kickDockClientSecret', oauthClientSecret.value.trim()); }catch(e){}
+  });
+
   let session = null; // {access_token, refresh_token, expires_at}
   let currentBroadcasterId = null; // set once connect() resolves the channel
 
