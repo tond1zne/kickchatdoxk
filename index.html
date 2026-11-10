@@ -190,9 +190,29 @@ function addMsg(d){
 }
 
 /* ---------- websocket ---------- */
-function wsConnect(id){
+let wsGen=0;
+async function pusherUrl(){
+  let key='34bf7a0ff419a2a775b9',cluster='us2'; // aktuální klíč po říjnové rotaci Kicku
+  try{
+    const ac=new AbortController();const to=setTimeout(()=>ac.abort(),3500);
+    const r=await fetch('https://web.kick.com/api/v1/realtime/connection',{method:'POST',signal:ac.signal,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({client:{id:crypto.randomUUID(),type:'web'},capabilities:{accepted_providers:[{provider:'pusher'}]}})});
+    clearTimeout(to);
+    if(r.ok){
+      const j=await r.json();
+      const c=((j.data&&j.data.connections)||[]).map(x=>x.credentials).find(x=>x&&x.app_key);
+      if(c){key=c.app_key;cluster=c.cluster||cluster}
+    }
+  }catch(e){}
+  return `wss://ws-${cluster}.pusher.com/app/${key}?protocol=7&client=js&version=8.4.0&flash=false`;
+}
+async function wsConnect(id){
   clearTimeout(rt);if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
-  ws=new WebSocket(PUSHER);
+  const my=++wsGen;
+  const url=await pusherUrl();
+  if(my!==wsGen)return;
+  ws=new WebSocket(url);
   const sock=ws;
   sys('Chatroom ID: '+id+' – otevírám spojení…');
   sock.onopen=()=>sock.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${id}.v2`}}));
