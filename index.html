@@ -2,719 +2,300 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Kick Chat + 7TV — OBS Dock</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kick Chat + 7TV</title>
 <style>
-  :root{
-    --bg: rgba(10,10,14,0.55);
-    --panel: rgba(20,20,26,0.92);
-    --text: #e9e9ef;
-    --muted: #8b8b98;
-    --accent: #53fc18; /* kick green */
-    --border: rgba(255,255,255,0.08);
-    --font-size: 15px;
-  }
-  *{box-sizing:border-box;}
-  html,body{
-    margin:0; padding:0; height:100%;
-    background: transparent;
-    font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif;
-    color: var(--text);
-    overflow: hidden;
-  }
-  #app{
-    height:100%;
-    display:flex;
-    flex-direction:column;
-    background: var(--bg);
-  }
-  #topbar{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:6px 8px;
-    background: var(--panel);
-    border-bottom:1px solid var(--border);
-    font-size:12px;
-    flex-shrink:0;
-  }
-  #topbar input[type=text]{
-    flex:1;
-    background:#111116;
-    border:1px solid var(--border);
-    color:var(--text);
-    border-radius:6px;
-    padding:5px 8px;
-    font-size:12px;
-  }
-  #topbar button{
-    background:var(--accent);
-    color:#052;
-    border:none;
-    border-radius:6px;
-    padding:5px 10px;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  #topbar button.secondary{
-    background:#2a2a33;
-    color:var(--text);
-  }
-  #status-dot{
-    width:9px;height:9px;border-radius:50%;
-    background:#666; flex-shrink:0;
-  }
-  #status-dot.ok{background:var(--accent); box-shadow:0 0 6px var(--accent);}
-  #status-dot.bad{background:#ff4d4d;}
-  #gear{
-    cursor:pointer; user-select:none; font-size:15px; padding:2px 4px;
-    color: var(--muted);
-  }
-  #settings{
-    display:none;
-    padding:10px;
-    background: var(--panel);
-    border-bottom:1px solid var(--border);
-    font-size:12px;
-    gap:8px;
-    flex-direction:column;
-    flex-shrink:0;
-  }
-  #settings.open{display:flex;}
-  #settings label{display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted);}
-  #settings input[type=range]{flex:1;}
-  #settings input[type=number]{width:60px; background:#111116;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:3px;}
-  #chat{
-    flex:1;
-    overflow-y:auto;
-    padding:6px 8px;
-    scroll-behavior:smooth;
-  }
-  #chat::-webkit-scrollbar{width:8px;}
-  #chat::-webkit-scrollbar-thumb{background:#333; border-radius:4px;}
-  .msg{
-    font-size: var(--font-size);
-    line-height:1.45;
-    margin-bottom:4px;
-    word-wrap:break-word;
-    padding:2px 4px;
-    border-radius:4px;
-    animation: fadein .15s ease-out;
-  }
-  @keyframes fadein{from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);}}
-  .msg .user{
-    font-weight:700;
-    margin-right:4px;
-  }
-  .msg .badge{
-    display:inline-block;
-    font-size:10px;
-    padding:1px 4px;
-    border-radius:3px;
-    background:#333;
-    color:#fff;
-    margin-right:3px;
-    vertical-align:middle;
-  }
-  .msg .badge.mod{background:#00c7ac;color:#012;}
-  .msg .badge.vip{background:#e5b300;color:#211900;}
-  .msg .badge.sub{background:#7a4cff;}
-  .msg .badge.host{background:var(--accent);color:#052;}
-  .msg img.emote{
-    height: calc(var(--font-size) + 10px);
-    vertical-align:middle;
-    margin:0 1px;
-  }
-  .msg.system{color:var(--muted); font-style:italic;}
-  .placeholder{
-    color:var(--muted);
-    font-size:12px;
-    padding:14px 8px;
-    text-align:center;
-  }
-  .placeholder code{background:#111; padding:1px 4px; border-radius:3px;}
+:root{
+  --accent:#53fc18; --text:#f1f1f6; --muted:#9a9aab;
+  --glass:rgba(18,18,24,.62); --panel:rgba(22,22,30,.96); --border:rgba(255,255,255,.09);
+  --fs:16px; --bgo:.35;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:transparent;color:var(--text);
+  font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;position:relative;background:rgba(8,8,12,var(--bgo))}
+#bar{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:8px;
+  padding:7px 10px;background:var(--panel);border-bottom:1px solid var(--border);
+  transform:translateY(-100%);opacity:0;transition:.2s}
+#app:hover #bar,#bar.pin{transform:none;opacity:1}
+#dot{width:9px;height:9px;border-radius:50%;background:#666;flex:none}
+#dot.ok{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+#dot.bad{background:#ff4d4d}
+#ch{flex:1;font-weight:600;font-size:13px}
+.btn{background:var(--accent);color:#06210a;border:0;border-radius:8px;padding:6px 12px;font-weight:700;font-size:12px;cursor:pointer}
+.btn.sec{background:#2b2b36;color:var(--text)}
+input[type=text],input[type=password],input[type=number]{background:#101015;border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;outline:none}
+input:focus{border-color:var(--accent)}
+#gear{cursor:pointer;color:var(--muted);font-size:17px;user-select:none}
+#settings{display:none;position:absolute;top:40px;left:8px;right:8px;z-index:6;max-height:calc(100% - 100px);
+  overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;
+  flex-direction:column;gap:8px;font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#settings.open{display:flex}
+#settings label{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--muted)}
+#settings h4{margin:6px 0 0;color:var(--text);font-size:12px}
+#chat{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px}
+#chat::-webkit-scrollbar{width:0}
+.msg{align-self:flex-start;max-width:100%;font-size:var(--fs);line-height:1.5;word-wrap:break-word;
+  background:var(--glass);backdrop-filter:blur(6px);border:1px solid var(--border);
+  border-left:3px solid var(--c,var(--accent));border-radius:4px 12px 12px 4px;padding:5px 11px;
+  text-shadow:0 1px 2px rgba(0,0,0,.5);animation:in .22s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes in{from{opacity:0;transform:translateX(-12px) scale(.97)}to{opacity:1;transform:none}}
+.user{font-weight:800;margin-right:5px}
+.badge{display:inline-block;font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;margin-right:4px;
+  vertical-align:middle;background:#444;color:#fff;letter-spacing:.4px}
+.badge.mod{background:#00c7ac;color:#012}.badge.vip{background:#e5b300;color:#211900}
+.badge.sub{background:#7a4cff}.badge.host{background:var(--accent);color:#06210a}
+img.emote{height:calc(var(--fs) + 12px);vertical-align:middle;margin:-4px 2px}
+.msg.sys{color:var(--muted);font-style:italic;font-size:12px;border-left-color:#555}
+#compose{display:flex;gap:6px;padding:8px 10px;background:var(--panel);border-top:1px solid var(--border);
+  transform:translateY(100%);opacity:0;transition:.2s;position:absolute;bottom:0;left:0;right:0}
+#app:hover #compose,#compose:focus-within{transform:none;opacity:1}
+#msgIn{flex:1;font-size:13px;border-radius:20px;padding:8px 14px}
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="topbar">
-    <span id="status-dot"></span>
-    <input id="channelInput" type="text" placeholder="kick.com/ NÁZEV_KANÁLU (slug)">
-    <button id="connectBtn">Připojit</button>
+  <div id="bar">
+    <span id="dot"></span><span id="ch"></span>
+    <span id="auth" style="font-size:11px;color:var(--muted)"></span>
+    <button class="btn" id="loginBtn">Přihlásit</button>
     <span id="gear" title="Nastavení">⚙</span>
   </div>
 
   <div id="settings">
-    <label>Velikost písma <input id="fontSize" type="range" min="11" max="26" value="15"></label>
-    <label>Neprůhlednost pozadí <input id="bgOpacity" type="range" min="0" max="100" value="55"></label>
-    <label>Max. zpráv v historii <input id="maxMsgs" type="number" value="150" min="20" max="500"></label>
-    <label><span>Vlastní chatroom ID (fallback, nepovinné)</span><input id="manualChatroom" type="text" style="width:100px" placeholder="např. 123456"></label>
-    <label><span>Vlastní Kick user ID pro 7TV (fallback, nepovinné)</span><input id="manualUserId" type="text" style="width:100px" placeholder="např. 191112"></label>
-    <button class="secondary" id="clearBtn">Vymazat chat</button>
-
-    <div style="border-top:1px solid var(--border); margin-top:6px; padding-top:8px;">
-      <div style="font-weight:600; margin-bottom:4px;">Odesílání zpráv (beta — může kvůli Kick bugu nefungovat)</div>
-      <label><span>Client ID appky</span><input id="oauthClientId" type="text" style="width:220px" placeholder="z kick.com/settings/developer"></label>
-      <label><span>Client Secret (pokud appka vyžaduje)</span><input id="oauthClientSecret" type="password" style="width:220px" placeholder="nepovinné"></label>
-      <label><span>Redirect URI (nastav stejné v appce)</span><input id="oauthRedirect" type="text" style="width:220px" readonly></label>
-      <label><span>Zapamatovat přihlášení v tomto prohlížeči</span><input id="rememberLogin" type="checkbox"></label>
-      <div style="display:flex; gap:6px; margin-top:4px;">
-        <button id="loginBtn">Přihlásit přes Kick</button>
-        <button class="secondary" id="logoutBtn">Odhlásit</button>
-      </div>
-      <div id="authStatus" style="margin-top:4px; color:var(--muted);">Nepřihlášen/a</div>
-
-      <div id="refreshTokenBox" style="display:none; margin-top:6px; padding:6px; background:#111116; border-radius:6px;">
-        <div style="color:var(--muted); margin-bottom:4px;">
-          Pokud přihlašování v OBS/Opeře nefunguje: přihlas se tady v běžném Chromu, zkopíruj token níže a vlož ho v OBS docku do pole "Ruční refresh token" dole.
-        </div>
-        <input id="refreshTokenOut" type="text" readonly style="width:100%; background:#0a0a0e; border:1px solid var(--border); color:var(--text); border-radius:4px; padding:4px; font-size:11px;">
-        <button class="secondary" id="copyRefreshBtn" style="margin-top:4px;">Kopírovat</button>
-      </div>
-
-      <label style="margin-top:6px;"><span>Ruční refresh token (vlož sem, pokud se přihlašování v tomto docku nezobrazuje)</span></label>
-      <div style="display:flex; gap:6px;">
-        <input id="manualRefreshToken" type="text" style="flex:1;" placeholder="vlož token získaný v Chromu">
-        <button id="useManualTokenBtn">Použít</button>
-      </div>
+    <label>Velikost písma <input id="fs" type="range" min="11" max="30" value="16"></label>
+    <label>Průhlednost pozadí <input id="bgo" type="range" min="0" max="100" value="35"></label>
+    <label>Kanál <input id="slug" type="text" style="width:150px"></label>
+    <h4>Kick appka (kick.com/settings/developer)</h4>
+    <label>Client ID <input id="cid" type="text" style="width:210px"></label>
+    <label>Client Secret <input id="sec" type="password" style="width:210px"></label>
+    <label>Redirect URI (nastav stejné v appce) <input id="redir" type="text" style="width:210px" readonly></label>
+    <h4>Ruční ID (jen když se samo nenajde)</h4>
+    <label>Chatroom ID <input id="mcr" type="text" style="width:110px"></label>
+    <label>Kick user ID <input id="muid" type="text" style="width:110px"></label>
+    <h4>Přihlášení do OBS docku (když OBS nepustí Kick login)</h4>
+    <label>Refresh token <input id="rt" type="text" style="width:210px" placeholder="vlož / zkopíruj"></label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn" id="useRt">Použít token</button>
+      <button class="btn sec" id="saveBtn">Uložit a připojit</button>
+      <button class="btn sec" id="logoutBtn">Odhlásit</button>
+      <button class="btn sec" id="clearBtn">Vymazat chat</button>
     </div>
   </div>
 
-  <div id="chat">
-    <div class="placeholder">
-      Zadej slug kanálu (např. pro <code>kick.com/xqc</code> napiš <code>xqc</code>) a klikni na Připojit.<br><br>
-      Tip: dá se otevřít i rovnou s parametrem v URL, např.<br><code>?channel=xqc</code>
-    </div>
-  </div>
+  <div id="chat"></div>
 
-  <div id="composeBar" style="display:flex; gap:6px; padding:6px 8px; background:var(--panel); border-top:1px solid var(--border); flex-shrink:0;">
-    <input id="composeInput" type="text" placeholder="Přihlas se v ⚙, pak sem piš zprávu…" disabled
-      style="flex:1; background:#111116; border:1px solid var(--border); color:var(--text); border-radius:6px; padding:6px 9px; font-size:13px;">
-    <button id="sendBtn" disabled style="background:var(--accent); color:#052; border:none; border-radius:6px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer;">Odeslat</button>
+  <div id="compose">
+    <input id="msgIn" type="text" placeholder="Přihlas se (⚙) a piš…" disabled>
+    <button class="btn" id="sendBtn" disabled>Odeslat</button>
   </div>
 </div>
 
 <script>
 (function(){
-  const chatEl = document.getElementById('chat');
-  const statusDot = document.getElementById('status-dot');
-  const channelInput = document.getElementById('channelInput');
-  const connectBtn = document.getElementById('connectBtn');
-  const gear = document.getElementById('gear');
-  const settingsPanel = document.getElementById('settings');
-  const fontSizeInput = document.getElementById('fontSize');
-  const bgOpacityInput = document.getElementById('bgOpacity');
-  const maxMsgsInput = document.getElementById('maxMsgs');
-  const manualChatroom = document.getElementById('manualChatroom');
-  const manualUserId = document.getElementById('manualUserId');
-  const clearBtn = document.getElementById('clearBtn');
+const $ = id => document.getElementById(id);
+const DEFAULT_CHANNEL = 'tond1zne';
+const REDIRECT = 'https://chatdock-1.vercel.app/';
+const PUSHER = 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false';
+const LS = {
+  get:(k,d='')=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}},
+  set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},
+  del:k=>{try{localStorage.removeItem(k)}catch(e){}}
+};
+const chat=$('chat'); let ws=null, rt=null, delay=2000, emotes=new Map(), broadcaster=null, session=null;
 
-  let ws = null;
-  let reconnectTimer = null;
-  let reconnectDelay = 2000;
-  let sevenTvEmotes = new Map(); // name -> url
-  let currentChannel = null;
+$('redir').value=REDIRECT;
+$('cid').value=LS.get('kd_cid'); $('sec').value=LS.get('kd_sec');
+$('mcr').value=LS.get('kd_mcr'); $('muid').value=LS.get('kd_muid');
+$('fs').value=LS.get('kd_fs','16'); $('bgo').value=LS.get('kd_bgo','35');
+const params=new URLSearchParams(location.search);
+$('slug').value=params.get('channel')||LS.get('kd_slug',DEFAULT_CHANNEL);
 
-  const PUSHER_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false";
+function applyLook(){
+  document.documentElement.style.setProperty('--fs',$('fs').value+'px');
+  document.documentElement.style.setProperty('--bgo',$('bgo').value/100);
+  LS.set('kd_fs',$('fs').value); LS.set('kd_bgo',$('bgo').value);
+}
+$('fs').oninput=$('bgo').oninput=applyLook; applyLook();
+$('gear').onclick=()=>{const o=$('settings').classList.toggle('open');$('bar').classList.toggle('pin',o)};
+$('clearBtn').onclick=()=>chat.innerHTML='';
 
-  gear.addEventListener('click', () => settingsPanel.classList.toggle('open'));
-  fontSizeInput.addEventListener('input', () => {
-    document.documentElement.style.setProperty('--font-size', fontSizeInput.value + 'px');
-  });
-  bgOpacityInput.addEventListener('input', () => {
-    const v = bgOpacityInput.value / 100;
-    document.documentElement.style.setProperty('--bg', `rgba(10,10,14,${v})`);
-  });
-  clearBtn.addEventListener('click', () => { chatEl.innerHTML = ''; });
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function scroll(){while(chat.children.length>120)chat.removeChild(chat.firstChild);chat.scrollTop=chat.scrollHeight}
+function sys(t){const d=document.createElement('div');d.className='msg sys';d.textContent=t;chat.appendChild(d);scroll()}
+const status=s=>$('dot').className=s;
 
-  function setStatus(state){
-    statusDot.className = state;
+/* ---------- načtení dat (s proxy fallbacky) ---------- */
+const PROXIES=[u=>u,u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
+  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  u=>'https://thingproxy.freeboard.io/fetch/'+u];
+async function getJson(url){
+  let err;
+  for(const p of PROXIES){
+    try{const r=await fetch(p(url),{headers:{Accept:'application/json'}});
+      if(!r.ok)throw 0;const d=await r.json();if(d&&typeof d==='object')return d;}catch(e){err=e}
   }
+  throw err||new Error('fetch');
+}
+async function resolve(slug){
+  const cache=JSON.parse(LS.get('kd_cache_'+slug,'null')||'null');
+  if(cache&&cache.chatroomId)return cache;
+  const d=await getJson('https://kick.com/api/v2/channels/'+encodeURIComponent(slug));
+  const out={chatroomId:d.chatroom&&d.chatroom.id,userId:d.user_id};
+  if(!out.chatroomId)throw new Error('no id');
+  LS.set('kd_cache_'+slug,JSON.stringify(out)); return out;
+}
+async function load7tv(uid){
+  emotes.clear(); if(!uid)return;
+  try{
+    const d=await getJson('https://7tv.io/v3/users/kick/'+uid);
+    ((d.emote_set&&d.emote_set.emotes)||[]).forEach(e=>emotes.set(e.name,`https://cdn.7tv.app/emote/${e.id}/3x.webp`));
+    sys('7TV emoty: '+emotes.size);
+  }catch(e){sys('7TV emoty se nenačetly.')}
+}
 
-  function addSystemMsg(text){
-    const div = document.createElement('div');
-    div.className = 'msg system';
-    div.textContent = text;
-    chatEl.appendChild(div);
-    trimAndScroll();
+/* ---------- vykreslení zpráv ---------- */
+function badges(s){
+  return(((s||{}).identity||{}).badges||[]).map(b=>{
+    const t=(b.type||'').toLowerCase();
+    const m=t.includes('mod')?['mod','MOD']:t.includes('vip')?['vip','VIP']:t.includes('sub')?['sub','SUB']:
+      (t.includes('broadcaster')||t.includes('host'))?['host','HOST']:null;
+    return m?`<span class="badge ${m[0]}">${m[1]}</span>`:'';
+  }).join('');
+}
+function content(raw){
+  const re=/\[emote:(\d+):([^\]]+)\]/g;let last=0,m,parts=[];
+  while((m=re.exec(raw))){parts.push(['t',raw.slice(last,m.index)]);parts.push(['k',m[1],m[2]]);last=re.lastIndex}
+  parts.push(['t',raw.slice(last)]);
+  return parts.map(p=>{
+    if(p[0]==='k')return `<img class="emote" src="https://files.kick.com/emotes/${p[1]}/fullsize" alt="${esc(p[2])}">`;
+    return p[1].split(/(\s+)/).map(w=>emotes.has(w)?`<img class="emote" src="${emotes.get(w)}" alt="${esc(w)}">`:esc(w)).join('');
+  }).join('');
+}
+function addMsg(d){
+  const s=d.sender||{},c=(s.identity&&s.identity.color)||'#53fc18';
+  const el=document.createElement('div');el.className='msg';el.style.setProperty('--c',c);
+  el.innerHTML=`${badges(s)}<span class="user" style="color:${esc(c)}">${esc(s.username||'???')}</span>${content(d.content||'')}`;
+  chat.appendChild(el);scroll();
+}
+
+/* ---------- websocket ---------- */
+function wsConnect(id){
+  clearTimeout(rt);if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
+  ws=new WebSocket(PUSHER);
+  ws.onopen=()=>ws.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${id}.v2`}}));
+  ws.onmessage=e=>{
+    let o;try{o=JSON.parse(e.data)}catch(x){return}
+    if(o.event==='pusher:connection_established'){status('ok');sys('Připojeno ✅');delay=2000}
+    else if(o.event==='pusher:ping')ws.send(JSON.stringify({event:'pusher:pong',data:{}}));
+    else if(/ChatMessage/.test(o.event)){try{addMsg(JSON.parse(o.data))}catch(x){}}
+  };
+  ws.onclose=()=>{status('bad');rt=setTimeout(()=>wsConnect(id),delay);delay=Math.min(delay*1.5,30000)};
+  ws.onerror=()=>status('bad');
+}
+async function connect(){
+  const slug=$('slug').value.trim()||DEFAULT_CHANNEL;
+  LS.set('kd_slug',slug);$('ch').textContent='kick.com/'+slug;
+  chat.innerHTML='';status('');sys('Připojuji se ke kanálu '+slug+'…');
+  let cr=$('mcr').value.trim(),uid=$('muid').value.trim();
+  if(!cr||!uid){
+    try{const r=await resolve(slug);cr=cr||r.chatroomId;uid=uid||r.userId}
+    catch(e){status('bad');sys('Kick blokuje zjištění ID. Otevři ⚙ a vlož Chatroom ID + user ID (kick.com/api/v2/channels/'+slug+').');$('settings').classList.add('open');$('bar').classList.add('pin');return}
   }
+  LS.set('kd_cache_'+slug,JSON.stringify({chatroomId:cr,userId:uid}));
+  broadcaster=uid;
+  await load7tv(uid);wsConnect(cr);
+}
+$('saveBtn').onclick=()=>{
+  LS.set('kd_cid',$('cid').value.trim());LS.set('kd_sec',$('sec').value.trim());
+  LS.set('kd_mcr',$('mcr').value.trim());LS.set('kd_muid',$('muid').value.trim());
+  connect();
+};
 
-  function trimAndScroll(){
-    const max = parseInt(maxMsgsInput.value, 10) || 150;
-    while (chatEl.children.length > max) {
-      chatEl.removeChild(chatEl.firstChild);
-    }
-    chatEl.scrollTop = chatEl.scrollHeight;
-  }
+/* ---------- OAuth (PKCE), přihlášení se pamatuje vždy ---------- */
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const rnd=n=>{const a=new Uint8Array(n);crypto.getRandomValues(a);return b64(a).slice(0,n)};
+function save(){session?LS.set('kd_session',JSON.stringify(session)):LS.del('kd_session')}
+function ui(){
+  const on=!!session;
+  $('msgIn').disabled=$('sendBtn').disabled=!on;
+  $('msgIn').placeholder=on?'Napiš zprávu…':'Přihlas se (⚙) a piš…';
+  $('auth').textContent=on?'přihlášen ✅':'';
+  $('loginBtn').style.display=on?'none':'';
+  if(on)$('rt').value=session.refresh_token||'';
+}
+async function tokenReq(body){
+  const cid=($('cid').value||LS.get('kd_cid')).trim(),sec=($('sec').value||LS.get('kd_sec')).trim();
+  body.set('client_id',cid);if(sec)body.set('client_secret',sec);
+  const r=await fetch('https://id.kick.com/oauth/token',{method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString()});
+  if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,120));
+  return r.json();
+}
+function setSession(d,oldRt){
+  session={access_token:d.access_token,refresh_token:d.refresh_token||oldRt,expires_at:Date.now()+(d.expires_in||3600)*1000};
+  save();ui();
+}
+async function refresh(force){
+  if(!session)return;
+  if(!force&&Date.now()<session.expires_at-120000)return;
+  const b=new URLSearchParams({grant_type:'refresh_token',refresh_token:session.refresh_token});
+  setSession(await tokenReq(b),session.refresh_token);
+}
+$('loginBtn').onclick=async()=>{
+  const cid=$('cid').value.trim();
+  if(!cid){alert('Nejdřív vyplň Client ID v ⚙.');return}
+  LS.set('kd_cid',cid);LS.set('kd_sec',$('sec').value.trim());
+  const v=rnd(64),st=rnd(24);
+  const ch=b64(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+  LS.set('kd_verifier',v);LS.set('kd_state',st);
+  const u=new URL('https://id.kick.com/oauth/authorize');
+  u.search=new URLSearchParams({client_id:cid,redirect_uri:REDIRECT,response_type:'code',
+    scope:'chat:write',code_challenge:ch,code_challenge_method:'S256',state:st});
+  location.href=u.toString();
+};
+$('logoutBtn').onclick=()=>{session=null;save();ui()};
+$('useRt').onclick=async()=>{
+  const t=$('rt').value.trim();if(!t)return;
+  try{setSession(await tokenReq(new URLSearchParams({grant_type:'refresh_token',refresh_token:t})),t);sys('Přihlášení tokenem OK ✅')}
+  catch(e){sys('Token nejde použít: '+e.message)}
+};
 
-  function escapeHtml(s){
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+async function send(){
+  const t=$('msgIn').value.trim();if(!t||!session)return;
+  if(!broadcaster){sys('Chvilku, ještě se připojuji ke kanálu.');return}
+  try{await refresh()}catch(e){sys('Přihlášení vypršelo, přihlas se znovu.');session=null;save();ui();return}
+  try{
+    const r=await fetch('https://api.kick.com/public/v1/chat',{method:'POST',
+      headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({broadcaster_user_id:Number(broadcaster),content:t,type:'user'})});
+    if(!r.ok){sys('Odeslání selhalo ('+r.status+'): '+(await r.text()).slice(0,150));return}
+    $('msgIn').value='';
+  }catch(e){sys('Odeslání selhalo (síť/CORS).')}
+}
+$('sendBtn').onclick=send;
+$('msgIn').onkeydown=e=>{if(e.key==='Enter')send()};
 
-  // fetch helper with several CORS-proxy fallbacks, tried in order
-  const PROXIES = [
-    url => url, // direct, no proxy
-    url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-    url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
-    url => 'https://thingproxy.freeboard.io/fetch/' + url,
-  ];
-
-  async function fetchJson(url){
-    let lastErr;
-    for (const buildUrl of PROXIES) {
+/* ---------- start ---------- */
+(async function init(){
+  try{session=JSON.parse(LS.get('kd_session','null')||'null')}catch(e){}
+  const code=params.get('code'),st=params.get('state');
+  if(code){
+    history.replaceState({},'',location.pathname);
+    if(st&&st===LS.get('kd_state')){
       try{
-        const r = await fetch(buildUrl(url), {headers:{'Accept':'application/json'}});
-        if (!r.ok) throw new Error('bad status ' + r.status);
-        const data = await r.json();
-        if (data && typeof data === 'object') return data;
-        throw new Error('unexpected response shape');
-      }catch(e){
-        lastErr = e;
-      }
-    }
-    throw lastErr || new Error('all fetch attempts failed');
+        setSession(await tokenReq(new URLSearchParams({grant_type:'authorization_code',redirect_uri:REDIRECT,
+          code_verifier:LS.get('kd_verifier'),code})));
+        sys('Přihlášení úspěšné ✅');
+      }catch(e){sys('Přihlášení selhalo: '+e.message)}
+    }else sys('Neplatný state, přihlášení zrušeno.');
   }
-
-  async function resolveChannel(slug){
-    const data = await fetchJson('https://kick.com/api/v2/channels/' + encodeURIComponent(slug));
-    const chatroomId = data && data.chatroom && data.chatroom.id;
-    const kickUserId = data && data.user_id;
-    if (!chatroomId) throw new Error('chatroom id nenalezeno');
-    return { chatroomId, kickUserId };
-  }
-
-  async function loadSevenTv(kickUserId){
-    sevenTvEmotes.clear();
-    if (!kickUserId) return;
-    try{
-      const data = await fetchJson('https://7tv.io/v3/users/kick/' + kickUserId);
-      const set = data && data.emote_set;
-      const emotes = (set && set.emotes) || [];
-      emotes.forEach(e => {
-        const id = e.id;
-        // 3x webp is a good balance of quality/size for chat display
-        const url = `https://cdn.7tv.app/emote/${id}/3x.webp`;
-        sevenTvEmotes.set(e.name, url);
-      });
-      addSystemMsg(`7TV emoty načteny: ${sevenTvEmotes.size}`);
-    }catch(e){
-      addSystemMsg('7TV emoty se nepodařilo načíst (kanál je možná nemá nastavené).');
-    }
-  }
-
-  function roleBadge(sender){
-    // sender.identity.badges is an array like [{type:'moderator'}, {type:'vip'}, {type:'subscriber'}]
-    const badges = (sender && sender.identity && sender.identity.badges) || [];
-    return badges.map(b => {
-      const t = (b.type || '').toLowerCase();
-      let cls = '';
-      let label = b.text || b.type;
-      if (t.includes('mod')) { cls='mod'; label='MOD'; }
-      else if (t.includes('vip')) { cls='vip'; label='VIP'; }
-      else if (t.includes('sub')) { cls='sub'; label='SUB'; }
-      else if (t.includes('broadcaster') || t.includes('host')) { cls='host'; label='HOST'; }
-      else return '';
-      return `<span class="badge ${cls}">${label}</span>`;
-    }).join('');
-  }
-
-  function renderContent(rawContent){
-    // 1. Extract Kick native emotes [emote:ID:Name] first, protecting them from HTML-escaping
-    const tokens = [];
-    let lastIndex = 0;
-    const kickEmoteRe = /\[emote:(\d+):([^\]]+)\]/g;
-    let m;
-    let plainParts = [];
-    while ((m = kickEmoteRe.exec(rawContent)) !== null) {
-      plainParts.push({type:'text', value: rawContent.slice(lastIndex, m.index)});
-      plainParts.push({type:'kickemote', id:m[1], name:m[2]});
-      lastIndex = kickEmoteRe.lastIndex;
-    }
-    plainParts.push({type:'text', value: rawContent.slice(lastIndex)});
-
-    // 2. Within text parts, tokenize by whitespace and swap 7TV emote names for images
-    let html = '';
-    plainParts.forEach(part => {
-      if (part.type === 'kickemote') {
-        html += `<img class="emote" src="https://files.kick.com/emotes/${part.id}/fullsize" title="${escapeHtml(part.name)}" alt="${escapeHtml(part.name)}">`;
-      } else {
-        const words = part.value.split(/(\s+)/); // keep separators
-        words.forEach(w => {
-          if (w.trim() === '') { html += w; return; }
-          if (sevenTvEmotes.has(w)) {
-            html += `<img class="emote" src="${sevenTvEmotes.get(w)}" title="${escapeHtml(w)}" alt="${escapeHtml(w)}">`;
-          } else {
-            html += escapeHtml(w);
-          }
-        });
-      }
-    });
-    return html;
-  }
-
-  function addChatMessage(payload){
-    const sender = payload.sender || {};
-    const username = sender.username || '???';
-    const color = (sender.identity && sender.identity.color) || '#8b8b98';
-    const content = payload.content || '';
-
-    const div = document.createElement('div');
-    div.className = 'msg';
-    div.innerHTML = `${roleBadge(sender)}<span class="user" style="color:${escapeHtml(color)}">${escapeHtml(username)}:</span> <span class="content">${renderContent(content)}</span>`;
-    chatEl.appendChild(div);
-    trimAndScroll();
-  }
-
-  function connectWebSocket(chatroomId){
-    if (ws) { try{ ws.close(); }catch(e){} }
-    clearTimeout(reconnectTimer);
-    ws = new WebSocket(PUSHER_URL);
-
-    ws.onopen = () => {
-      const sub = {
-        event: 'pusher:subscribe',
-        data: { auth: '', channel: `chatrooms.${chatroomId}.v2` }
-      };
-      ws.send(JSON.stringify(sub));
-    };
-
-    ws.onmessage = (evt) => {
-      let outer;
-      try { outer = JSON.parse(evt.data); } catch(e){ return; }
-
-      if (outer.event === 'pusher:connection_established') {
-        setStatus('ok');
-        addSystemMsg('Připojeno k chatu ✅');
-        reconnectDelay = 2000;
-        return;
-      }
-      if (outer.event === 'pusher:ping') {
-        ws.send(JSON.stringify({event:'pusher:pong', data:{}}));
-        return;
-      }
-      if (outer.event === 'pusher:error') {
-        addSystemMsg('Pusher chyba: ' + JSON.stringify(outer.data));
-        return;
-      }
-
-      if (outer.event === 'App\\Events\\ChatMessageEvent' || outer.event === 'App\\Events\\ChatMessageSentEvent') {
-        let data;
-        try { data = JSON.parse(outer.data); } catch(e){ return; }
-        // some payload shapes nest under .message, others are flat
-        const payload = data.message ? Object.assign({}, data, {content: data.message.message || data.message.content, sender: data.sender || data.message.sender}) : data;
-        addChatMessage(payload);
-      }
-    };
-
-    ws.onclose = () => {
-      setStatus('bad');
-      addSystemMsg('Spojení přerušeno, zkouším znovu…');
-      reconnectTimer = setTimeout(() => connectWebSocket(chatroomId), reconnectDelay);
-      reconnectDelay = Math.min(reconnectDelay * 1.5, 30000);
-    };
-
-    ws.onerror = () => {
-      setStatus('bad');
-    };
-  }
-
-  async function connect(slug){
-    if (!slug) return;
-    currentChannel = slug;
-    chatEl.innerHTML = '';
-    setStatus('');
-    addSystemMsg(`Připojuji se ke kanálu "${slug}"…`);
-
-    let chatroomId = manualChatroom.value.trim();
-    let kickUserId = manualUserId.value.trim();
-
-    try{
-      if (!chatroomId || !kickUserId) {
-        const resolved = await resolveChannel(slug);
-        chatroomId = chatroomId || resolved.chatroomId;
-        kickUserId = kickUserId || resolved.kickUserId;
-      }
-    }catch(e){
-      addSystemMsg('Nepodařilo se automaticky najít chatroom ID (Kick blokuje požadavek). Zadej ho ručně v ⚙ Nastavení.');
-      setStatus('bad');
-      return;
-    }
-
-    currentBroadcasterId = kickUserId || currentBroadcasterId;
-    await loadSevenTv(kickUserId);
-    connectWebSocket(chatroomId);
-  }
-
-  connectBtn.addEventListener('click', () => connect(channelInput.value.trim()));
-  channelInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connect(channelInput.value.trim()); });
-
-  // ---------- Odesílání zpráv: Kick OAuth (PKCE) ----------
-  const oauthClientId = document.getElementById('oauthClientId');
-  const oauthClientSecret = document.getElementById('oauthClientSecret');
-  const oauthRedirect = document.getElementById('oauthRedirect');
-  const rememberLogin = document.getElementById('rememberLogin');
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const authStatus = document.getElementById('authStatus');
-  const composeInput = document.getElementById('composeInput');
-  const sendBtn = document.getElementById('sendBtn');
-
-  // redirect URI is FIXED on purpose — must never depend on which exact URL/alias
-  // the page happens to be loaded from (Vercel gives every deployment its own
-  // throwaway alias in addition to the stable production domain).
-  // ⚠️ Replace the line below with YOUR real production domain from Vercel.
-  oauthRedirect.value = 'https://chatdock-1.vercel.app/';
-
-  // Client ID / Secret must survive the full-page reload that happens when
-  // Kick redirects back with ?code=... — a plain <input> resets on reload,
-  // so persist these to localStorage and restore them immediately.
-  (function restoreOauthAppCreds(){
-    try{
-      const savedId = localStorage.getItem('kickDockClientId');
-      const savedSecret = localStorage.getItem('kickDockClientSecret');
-      if (savedId) oauthClientId.value = savedId;
-      if (savedSecret) oauthClientSecret.value = savedSecret;
-    }catch(e){}
-  })();
-  oauthClientId.addEventListener('input', () => {
-    try{ localStorage.setItem('kickDockClientId', oauthClientId.value.trim()); }catch(e){}
-  });
-  oauthClientSecret.addEventListener('input', () => {
-    try{ localStorage.setItem('kickDockClientSecret', oauthClientSecret.value.trim()); }catch(e){}
-  });
-
-  let session = null; // {access_token, refresh_token, expires_at}
-  let currentBroadcasterId = null; // set once connect() resolves the channel
-
-  function b64url(bytes){
-    let str = btoa(String.fromCharCode(...new Uint8Array(bytes)));
-    return str.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  }
-  function randomString(len){
-    const arr = new Uint8Array(len);
-    crypto.getRandomValues(arr);
-    return b64url(arr).slice(0, len);
-  }
-  async function pkceChallenge(verifier){
-    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
-    return b64url(digest);
-  }
-
-  function persistSession(){
-    if (rememberLogin.checked && session) {
-      localStorage.setItem('kickChatDockSession', JSON.stringify(session));
-    } else {
-      localStorage.removeItem('kickChatDockSession');
-    }
-  }
-
-  function loadPersistedSession(){
-    try{
-      const raw = localStorage.getItem('kickChatDockSession');
-      if (raw) { session = JSON.parse(raw); rememberLogin.checked = true; }
-    }catch(e){}
-  }
-
-  function setLoggedInUi(){
-    if (session) {
-      authStatus.textContent = 'Přihlášen/a ✅ (token vyprší ' + new Date(session.expires_at).toLocaleTimeString() + ')';
-      composeInput.disabled = false;
-      sendBtn.disabled = false;
-      composeInput.placeholder = 'Napiš zprávu do chatu…';
-      document.getElementById('refreshTokenBox').style.display = 'block';
-      document.getElementById('refreshTokenOut').value = session.refresh_token || '';
-    } else {
-      authStatus.textContent = 'Nepřihlášen/a';
-      composeInput.disabled = true;
-      sendBtn.disabled = true;
-      composeInput.placeholder = 'Přihlas se v ⚙, pak sem piš zprávu…';
-      document.getElementById('refreshTokenBox').style.display = 'none';
-    }
-  }
-
-  loginBtn.addEventListener('click', async () => {
-    const clientId = oauthClientId.value.trim();
-    if (!clientId) { alert('Vyplň Client ID appky (kick.com/settings/developer).'); return; }
-    const verifier = randomString(64);
-    const challenge = await pkceChallenge(verifier);
-    const state = randomString(24);
-    sessionStorage.setItem('kick_pkce_verifier', verifier);
-    sessionStorage.setItem('kick_oauth_state', state);
-
-    const authUrl = new URL('https://id.kick.com/oauth/authorize');
-    authUrl.searchParams.set('client_id', clientId);
-    // undocumented workaround only needed when redirect_uri itself points at 127.0.0.1
-    if (oauthRedirect.value.includes('127.0.0.1')) {
-      authUrl.searchParams.set('redirect', '1');
-    }
-    authUrl.searchParams.set('redirect_uri', oauthRedirect.value);
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'chat:write');
-    authUrl.searchParams.set('code_challenge', challenge);
-    authUrl.searchParams.set('code_challenge_method', 'S256');
-    authUrl.searchParams.set('state', state);
-
-    location.href = authUrl.toString();
-  });
-
-  logoutBtn.addEventListener('click', () => {
-    session = null;
-    localStorage.removeItem('kickChatDockSession');
-    setLoggedInUi();
-  });
-
-  async function exchangeCodeForToken(code){
-    const clientId = oauthClientId.value.trim();
-    const clientSecret = oauthClientSecret.value.trim();
-    const verifier = sessionStorage.getItem('kick_pkce_verifier') || '';
-
-    const body = new URLSearchParams();
-    body.set('grant_type', 'authorization_code');
-    body.set('client_id', clientId);
-    if (clientSecret) body.set('client_secret', clientSecret);
-    body.set('redirect_uri', oauthRedirect.value);
-    body.set('code_verifier', verifier);
-    body.set('code', code);
-
-    const r = await fetch('https://id.kick.com/oauth/token', {
-      method: 'POST',
-      headers: {'Content-Type':'application/x-www-form-urlencoded'},
-      body: body.toString()
-    });
-    if (!r.ok) throw new Error('token exchange selhal: ' + r.status + ' ' + (await r.text()));
-    const data = await r.json();
-    session = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      expires_at: Date.now() + (data.expires_in || 3600) * 1000
-    };
-    persistSession();
-    setLoggedInUi();
-  }
-
-  async function refreshTokenIfNeeded(){
-    if (!session) return;
-    if (Date.now() < session.expires_at - 60000) return; // still valid for >1min
-    await exchangeRefreshToken(session.refresh_token);
-  }
-
-  async function exchangeRefreshToken(refreshToken){
-    const clientId = oauthClientId.value.trim();
-    const clientSecret = oauthClientSecret.value.trim();
-    if (!clientId) throw new Error('Chybí Client ID appky v nastavení.');
-    const body = new URLSearchParams();
-    body.set('grant_type', 'refresh_token');
-    body.set('client_id', clientId);
-    if (clientSecret) body.set('client_secret', clientSecret);
-    body.set('refresh_token', refreshToken);
-    const r = await fetch('https://id.kick.com/oauth/token', {
-      method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString()
-    });
-    if (!r.ok) throw new Error('refresh selhal: ' + r.status);
-    const data = await r.json();
-    session = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || refreshToken,
-      expires_at: Date.now() + (data.expires_in || 3600) * 1000
-    };
-    persistSession();
-    setLoggedInUi();
-  }
-
-  document.getElementById('useManualTokenBtn').addEventListener('click', async () => {
-    const token = document.getElementById('manualRefreshToken').value.trim();
-    if (!token) return;
-    try {
-      await exchangeRefreshToken(token);
-      addSystemMsg('Přihlášení pomocí ručního tokenu úspěšné ✅');
-    } catch(e) {
-      addSystemMsg('Ruční token se nepodařilo použít: ' + e.message);
-    }
-  });
-
-  document.getElementById('copyRefreshBtn').addEventListener('click', () => {
-    const out = document.getElementById('refreshTokenOut');
-    out.select();
-    document.execCommand('copy');
-  });
-
-  async function sendChatMessage(text){
-    if (!session) return;
-    if (!currentBroadcasterId) { addSystemMsg('Nejdřív se připoj ke kanálu, pak teprve piš.'); return; }
-    try{
-      await refreshTokenIfNeeded();
-    }catch(e){
-      addSystemMsg('Obnovení přihlášení selhalo, přihlas se znovu (nebo vlož nový ruční token).');
-      session = null;
-      setLoggedInUi();
-      return;
-    }
-    try{
-      const r = await fetch('https://api.kick.com/public/v1/chat', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + session.access_token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          broadcaster_user_id: Number(currentBroadcasterId),
-          content: text,
-          type: 'user'
-        })
-      });
-      if (!r.ok) {
-        const errText = await r.text();
-        addSystemMsg('Odeslání se nepovedlo (' + r.status + '): ' + errText.slice(0,200));
-        return;
-      }
-      composeInput.value = '';
-    }catch(e){
-      addSystemMsg('Odeslání selhalo — síťová/CORS chyba.');
-    }
-  }
-
-  sendBtn.addEventListener('click', () => {
-    const text = composeInput.value.trim();
-    if (text) sendChatMessage(text);
-  });
-  composeInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      const text = composeInput.value.trim();
-      if (text) sendChatMessage(text);
-    }
-  });
-
-  // handle OAuth redirect back (?code=...&state=...)
-  (async function handleOAuthRedirect(){
-    const p = new URLSearchParams(location.search);
-    const code = p.get('code');
-    const state = p.get('state');
-    if (code) {
-      const savedState = sessionStorage.getItem('kick_oauth_state');
-      history.replaceState({}, '', location.pathname); // strip query params from URL
-      if (state && savedState && state !== savedState) {
-        addSystemMsg('OAuth state se neshoduje, přihlášení zrušeno (bezpečnostní kontrola).');
-        return;
-      }
-      try{
-        await exchangeCodeForToken(code);
-        addSystemMsg('Přihlášení úspěšné, teď můžeš psát do chatu ✅');
-      }catch(e){
-        addSystemMsg('Přihlášení selhalo: ' + e.message);
-      }
-    }
-  })();
-
-  loadPersistedSession();
-  setLoggedInUi();
-
-  // auto-connect via ?channel=slug
-  const params = new URLSearchParams(location.search);
-  const preChannel = params.get('channel');
-  if (preChannel) {
-    channelInput.value = preChannel;
-    connect(preChannel);
-  }
+  ui();
+  connect();
+  if(session)refresh().catch(()=>{});
+  setInterval(()=>refresh().catch(()=>{}),5*60*1000); // udržuje přihlášení naživu
+})();
 })();
 </script>
 </body>
