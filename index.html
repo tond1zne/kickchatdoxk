@@ -173,7 +173,16 @@ function content(raw){
     return p[1].split(/(\s+)/).map(w=>emotes.has(w)?`<img class="emote" src="${emotes.get(w)}" alt="${esc(w)}">`:esc(w)).join('');
   }).join('');
 }
+const pending=[];
+function echoOwn(t){
+  const el=document.createElement('div');el.className='msg';el.style.setProperty('--c','#53fc18');
+  el.innerHTML=`<span class="user" style="color:#53fc18">Ty</span>${content(t)}`;
+  chat.appendChild(el);scroll();
+  pending.push({text:t,el,t:Date.now()});
+}
 function addMsg(d){
+  const pi=pending.findIndex(p=>p.text===(d.content||'')&&Date.now()-p.t<10000);
+  if(pi>=0){pending[pi].el.remove();pending.splice(pi,1)}
   const s=d.sender||{},c=(s.identity&&s.identity.color)||'#53fc18';
   const el=document.createElement('div');el.className='msg';el.style.setProperty('--c',c);
   el.innerHTML=`${badges(s)}<span class="user" style="color:${esc(c)}">${esc(s.username||'???')}</span>${content(d.content||'')}`;
@@ -271,6 +280,9 @@ async function send(){
       headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
       body:JSON.stringify({broadcaster_user_id:Number(broadcaster),content:t,type:'user'})});
     if(!r.ok){sys('Odeslání selhalo ('+r.status+'): '+(await r.text()).slice(0,150));return}
+    let ok=true;try{const j=await r.json();if(j&&j.data&&j.data.is_sent===false)ok=false}catch(e){}
+    if(!ok){sys('Kick zprávu nepřijal (is_sent=false).');return}
+    echoOwn(t);
     $('msgIn').value='';
   }catch(e){sys('Odeslání selhalo (síť/CORS).')}
 }
