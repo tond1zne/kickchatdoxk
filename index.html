@@ -193,15 +193,23 @@ function addMsg(d){
 function wsConnect(id){
   clearTimeout(rt);if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
   ws=new WebSocket(PUSHER);
-  ws.onopen=()=>ws.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${id}.v2`}}));
-  ws.onmessage=e=>{
+  const sock=ws;
+  sys('Chatroom ID: '+id+' – otevírám spojení…');
+  sock.onopen=()=>sock.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${id}.v2`}}));
+  sock.onmessage=e=>{
     let o;try{o=JSON.parse(e.data)}catch(x){return}
-    if(o.event==='pusher:connection_established'){status('ok');sys('Připojeno ✅');delay=2000}
-    else if(o.event==='pusher:ping')ws.send(JSON.stringify({event:'pusher:pong',data:{}}));
-    else if(/ChatMessage/.test(o.event)){try{addMsg(JSON.parse(o.data))}catch(x){}}
+    if(o.event==='pusher:connection_established'){delay=2000}
+    else if(o.event==='pusher_internal:subscription_succeeded'){status('ok');sys('Připojeno k chatu ✅')}
+    else if(o.event==='pusher:ping')sock.send(JSON.stringify({event:'pusher:pong',data:{}}));
+    else if(o.event==='pusher:error'){sys('Pusher chyba: '+(typeof o.data==='string'?o.data:JSON.stringify(o.data)))}
+    else if(/ChatMessage/.test(o.event)){
+      status('ok');
+      try{let d=o.data;if(typeof d==='string')d=JSON.parse(d);addMsg(d)}catch(x){sys('Zprávu nešlo přečíst.')}
+    }
   };
-  ws.onclose=()=>{status('bad');rt=setTimeout(()=>wsConnect(id),delay);delay=Math.min(delay*1.5,30000)};
-  ws.onerror=()=>status('bad');
+  sock.onclose=ev=>{status('bad');sys('Spojení spadlo (kód '+ev.code+'), zkouším znovu…');
+    rt=setTimeout(()=>wsConnect(id),delay);delay=Math.min(delay*1.5,30000)};
+  sock.onerror=()=>status('bad');
 }
 async function connect(){
   const slug=$('slug').value.trim()||DEFAULT_CHANNEL;
